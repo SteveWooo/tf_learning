@@ -1,0 +1,26 @@
+{
+  "name": "tf_learning",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "@tensorflow/tfjs": "^2.4.0",
+    "canvas": "^2.6.1",
+    "express": "^4.17.1",
+    "gm": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SteveWooo/tf_learning.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SteveWooo/tf_learning/issues"
+  },
+  "homepage": "https://github.com/SteveWooo/tf_learning#readme"
+}
