@@ -1,5 +1,5 @@
 const tf = require("@tensorflow/tfjs");
-// require('@tensorflow/tfjs-node');
+require('@tensorflow/tfjs-node');
 const Canvas = require('canvas');
 const Express = require('express');
 const app = Express();
@@ -211,6 +211,7 @@ async function main(){
     model.add(tf.layers.flatten({
         inputShape: [IMAGE_H, IMAGE_W, 1]
     }));
+    
     model.add(tf.layers.dense({
         units: 42, activation: 'relu'
     }));
@@ -237,17 +238,13 @@ async function main(){
         // console.log(output)
 
         await model.fit(input, output, {
-            batchSize : 10,
-            epochs : 1,
-            // verbose : 2,
-            // validationSplit : 0.15,
+            batchSize : 520,
+            epochs : 112,
+            verbose : 1,
+            validationSplit : 0.15,
         })
 
-        let testData = dataset.images.test;
-        let res = model.predict(tf.tensor4d(testData,
-            [testData.length / (28*28), 28, 28, 1])).print();
-        console.log(res)
-        // await model.save(`file://./model.json`);
+        await model.save(`file://./model`);
     }catch(e) {
         console.log(e)
     }
@@ -256,12 +253,33 @@ async function main(){
 
 async function test(){
     await loadData();
-    let model = await tf.loadLayersModel(`file://./model.json`);
+    let model = await tf.loadLayersModel(`file://./model/model.json`);
+    // let testData = dataset.images.test.slice(0, 2*28*28);
     let testData = dataset.images.test;
-        let res = model.predict(tf.tensor4d(testData,
-            [testData.length / (28*28), 28, 28, 1]));
-        console.log(res)
+    let res = model.predict(tf.tensor4d(testData,
+        [testData.length / (28*28), 28, 28, 1]));
+    res = await res.array();
+    // console.log(res.length)
+    // console.log(dataset.labels.test);
+
+    let totalGapPercentage = 0;
+    for(var i=0;i<res.length;i++) {
+        res[i] = new Float32Array(res[i]);
+        // console.log(res[i]);
+        let testLabel = dataset.labels.test.slice(i * NUM_CLASSES, i * NUM_CLASSES + NUM_CLASSES);
+        // console.log(testLabel)
+        let gap = 0;
+        for(var k=0;k<NUM_CLASSES;k++) {
+            gap += Math.abs(res[i][k] - testLabel[k]);
+        }
+        let gapPercentage = gap / 10;
+        totalGapPercentage += gapPercentage;
+        // console.log(gapPercentage)
+    }
+
+    let errorRate = totalGapPercentage / res.length;
+    console.log(`correct Rate : ${1 - errorRate}`);
 }
 
-main();
-// test();
+// main();
+test();
