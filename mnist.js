@@ -1,4 +1,5 @@
 const tf = require("@tensorflow/tfjs");
+// require('@tensorflow/tfjs-node');
 const Canvas = require('canvas');
 const Express = require('express');
 const app = Express();
@@ -154,25 +155,46 @@ async function loadData(){
     // for(var i=0;i<trainingDataRGB1.data.length;i++) {
     //     dataset.images.training.push(trainingDataRGB1.data[i]);
     // }
-    dataset.images.training = Array.prototype.slice.call(trainingDataRGB1.data);
-    console.log('trans1')
+    // dataset.images.training = Array.prototype.slice.call(trainingDataRGB1.data);
+    dataset.images.training = new Float32Array(30000 * 28 * 28);
+    // 只需要读红色chanel
+    for(var i=0;i<trainingDataRGB1.data.length/4;i+=4) {
+        dataset.images.training[i/4] = trainingDataRGB1.data[i];
+    }
 
-    let trainingData2Canvas = Canvas.createCanvas(28 * 28, 25000);
-    let trainingData2Ctx = trainingData2Canvas.getContext('2d');
-    let trainingData2 = await Canvas.loadImage(`${__dirname}/../dataset/mnist/mnist_training_data2.png`);
-    trainingData2Ctx.drawImage(trainingData2, 0, 0, 28 * 28, 25000);
-    let trainingDataRGB2 = trainingData2Ctx.getImageData(0, 0, 28 * 28, 25000);
-    // for(var i=0;i<25000;i++) {
-    //     dataset.images.training.push(trainingDataRGB2.data.slice(i*4*28*28, i*4*28*28 + 4*28*28));
-    // }
-    // console.log(dataset.images.training.length)
-    trainingDataRGB2.data = Array.prototype.slice.call(trainingDataRGB2.data);
-    console.log('concating')
-    dataset.images.training = dataset.images.training.concat(trainingDataRGB2.data);
+    // let trainingData2Canvas = Canvas.createCanvas(28 * 28, 25000);
+    // let trainingData2Ctx = trainingData2Canvas.getContext('2d');
+    // let trainingData2 = await Canvas.loadImage(`${__dirname}/../dataset/mnist/mnist_training_data2.png`);
+    // trainingData2Ctx.drawImage(trainingData2, 0, 0, 28 * 28, 25000);
+    // let trainingDataRGB2 = trainingData2Ctx.getImageData(0, 0, 28 * 28, 25000);
+    // // for(var i=0;i<25000;i++) {
+    // //     dataset.images.training.push(trainingDataRGB2.data.slice(i*4*28*28, i*4*28*28 + 4*28*28));
+    // // }
+    // // console.log(dataset.images.training.length)
+    // trainingDataRGB2.data = Array.prototype.slice.call(trainingDataRGB2.data);
+    // console.log('concating')
+    // dataset.images.training = dataset.images.training.concat(trainingDataRGB2.data);
     console.log(`loaded images`);
 
-    dataset.labels.training = dataset.label.slice(0, 550000);
-    dataset.labels.test = dataset.label.slice(550000, 650000);
+    let testData1Canvas = Canvas.createCanvas(28 * 28, 10000);
+    let testData1Ctx = testData1Canvas.getContext('2d');
+    let testData1 = await Canvas.loadImage(`${__dirname}/../dataset/mnist/mnist_test_data.png`);
+    testData1Ctx.drawImage(testData1, 0, 0, 28 * 28, 10000);
+    let testDataRGB1 = testData1Ctx.getImageData(0, 0, 28 * 28, 10000);
+    // for(var i=0;i<trainingDataRGB1.data.length;i++) {
+    //     dataset.images.training.push(trainingDataRGB1.data[i]);
+    // }
+    // dataset.images.training = Array.prototype.slice.call(trainingDataRGB1.data);
+    dataset.images.test = new Float32Array(10000 * 28 * 28);
+    // 只需要读红色chanel
+    for(var i=0;i<testDataRGB1.data.length/4;i+=4) {
+        dataset.images.test[i/4] = testDataRGB1.data[i];
+    }
+    console.log('loaded test Images.');
+
+    // dataset.labels.training = dataset.label.slice(0, 550000);
+    dataset.labels.training = new Float32Array(dataset.label.slice(0, 300000));
+    dataset.labels.test = new Float32Array(dataset.label.slice(550000, 650000));
     console.log(`loaded labels`);
     return ;
 }
@@ -204,26 +226,42 @@ async function main(){
 
     try{
         let trainingData = dataset.images.training;
-        // 把uint8转换为普通数组
+        
         let input = tf.tensor4d(trainingData,
-            [trainingData.length / 28*28, 28, 28, 1]) // hight, width
-
-        let labelData = dataset.labels.training
-        let output = tf.tensor2d(Array.prototype.slice.call(labelData),
+            [trainingData.length / (28*28), 28, 28, 1]) // hight, width
+        
+        let labelData = dataset.labels.training;
+        let output = tf.tensor2d(labelData,
             [labelData.length / NUM_CLASSES, NUM_CLASSES]);
         
-        console.log(output)
+        // console.log(output)
 
-        // await model.fit(input, output, {
-        //     batchSize : 30,
-        //     epochs : 1,
-        //     verbose : 0,
-        //     // validationSplit : 0.15,
-        // })
+        await model.fit(input, output, {
+            batchSize : 10,
+            epochs : 1,
+            // verbose : 2,
+            // validationSplit : 0.15,
+        })
+
+        let testData = dataset.images.test;
+        let res = model.predict(tf.tensor4d(testData,
+            [testData.length / (28*28), 28, 28, 1])).print();
+        console.log(res)
+        // await model.save(`file://./model.json`);
     }catch(e) {
         console.log(e)
     }
 
 }
 
+async function test(){
+    await loadData();
+    let model = await tf.loadLayersModel(`file://./model.json`);
+    let testData = dataset.images.test;
+        let res = model.predict(tf.tensor4d(testData,
+            [testData.length / (28*28), 28, 28, 1]));
+        console.log(res)
+}
+
 main();
+// test();
