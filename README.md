@@ -20,25 +20,33 @@ npm i --save canvas
 ```
 
 ### 开始
-###### 入口函数为mnist.js，里面包含两个函数，分别包含训练和测试。
+###### 入口文件为mnist.js，里面包含两个函数，分别包含训练和测试。
 ```
 traing();
 test(); 
 ```
 
-###### 首先是训练，数据集保存在以下目录。
+###### 首先是训练training()，它需要调用训练数据集，而数据集保存在以下目录。
 ```
 ./data/mnist
 ```
-包括了：
+数据集里面包括了：
 1. 65000组标签集合（mnist_labels_uint8），其中55000为训练集的标签，10000为测试集标签。每组标签由10个二进制组成，每组标签只有一个1，这个1的下标就代表这个手写图片的数字（0到9）。
 2. 10000条测试数据集（mnist_test_data.png）
 3. 30000 + 25000 = 55000 条训练数据集(mnist_training_data1.png, mnist_training_data2.png)。因为Canvas读不下全部数据（全部也就共10M+，Canvas读8M就歇菜了），所以这里我提前使用gm把图片切割了一下，大家尽管用就可以了。
 
+###### 然后自己构建模型，进行训练
+代码里的model.fit函数
 
 ###### 训练完成后，模型会保存在
 ```
-./model/mnist
+await model.save(`file://./model/mnist`);
+```
+这里坑挺大的，连文件保存都是直接给原生代码套壳的感觉。
+
+###### 测试的时候，会把模型调出来，同时把测试数据集导入进去
+```
+let model = await tf.loadLayersModel(`file://./model/mnist/model.json`);
 ```
 然后test就会把这个模型调出来，然后跑predict函数，再对比。
 
