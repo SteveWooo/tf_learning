@@ -1,4 +1,4 @@
-# Mnist数据集在Nodejs下使用TF框架DEMO
+# Windows环境下使用nodejs版本的Tensorflow完成mnist数据集训练测试
 在windows下使用nodejs完成mnist数据集训练工程的记录。工程内涵括数据集
 ### 安装依赖
 该工程在windwos下可完美运作，前提是需要做好充分的安装准备。
