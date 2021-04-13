@@ -50,5 +50,3 @@ let model = await tf.loadLayersModel(`file://./model/mnist/model.json`);
 ```
 然后test就会把这个模型调出来，然后跑predict函数，再对比。
 
-### 其他
-main.js 是一个二元一次方程的入门demo，适合我这种憨憨学，大神们大可不必吐槽。
